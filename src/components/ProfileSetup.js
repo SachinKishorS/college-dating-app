@@ -80,7 +80,8 @@ const ProfileSetup = () => {
 
       if (profileError) throw profileError;
 
-      navigate('/swipe');
+      // Force a page reload to update the app state
+      window.location.href = '/swipe';
     } catch (err) {
       setError(err.message);
     } finally {
