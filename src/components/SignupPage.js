@@ -124,6 +124,7 @@ const SignupPage = () => {
 
   return (
     <div className="container">
+      {/* Updated without heart symbol */}
       <h1>College Connect</h1>
       <p className="subtitle">Join the RVCE dating community</p>
       

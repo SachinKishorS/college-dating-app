@@ -61,7 +61,8 @@ npm run build
 ```
 
 ### Step 2: Deploy to Netlify
-1. Go to [netlify.com](https://netlify.com)
+1. Go to [netlify.com](
+  https://netlify.com)
 2. Sign up/Login
 3. Drag and drop your `build` folder to the deploy area
 4. Or connect your GitHub repository
