@@ -1,26 +1,5 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
-    }
-  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
-  ],
-  "headers": [
-    {
-      "source": "/static/(.*)",
-      "headers": [
-        {
-          "key": "cache-control",
-          "value": "s-maxage=31536000,immutable"
-        }
-      ]
-    }
   ]
 }
