@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { supabase, db } from './supabaseClient';
 import SignupPage from './components/SignupPage';
 import ProfileSetup from './components/ProfileSetup';
+import SimpleProfileSetup from './components/SimpleProfileSetup';
 import SwipeInterface from './components/SwipeInterface';
 import MatchesScreen from './components/MatchesScreen';
 import ChatScreen from './components/ChatScreen';
@@ -82,7 +83,7 @@ function App() {
                 profileComplete ? (
                   <Navigate to="/swipe" />
                 ) : (
-                  <ProfileSetup />
+                  <SimpleProfileSetup />
                 )
               ) : (
                 <Navigate to="/" />

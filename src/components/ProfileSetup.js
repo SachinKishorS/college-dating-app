@@ -71,19 +71,34 @@ const ProfileSetup = () => {
         photoUrl = await uploadPhoto(formData.photo);
       }
 
-      const { error: profileError } = await db.updateProfile(user.id, {
+      // First try to update existing profile, if that fails, create new one
+      let { error: profileError } = await db.updateProfile(user.id, {
         name: formData.name,
         age: parseInt(formData.age),
         bio: formData.bio,
         photo_url: photoUrl
       });
 
-      if (profileError) throw profileError;
+      // If update fails, try to create new profile
+      if (profileError) {
+        const { error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            name: formData.name,
+            age: parseInt(formData.age),
+            bio: formData.bio,
+            photo_url: photoUrl
+          });
+        
+        if (createError) throw createError;
+      }
 
       // Force a page reload to update the app state
       window.location.href = '/swipe';
     } catch (err) {
-      setError(err.message);
+      console.error('Profile setup error:', err);
+      setError(err.message || 'Failed to create profile. Please try again.');
     } finally {
       setIsLoading(false);
     }
