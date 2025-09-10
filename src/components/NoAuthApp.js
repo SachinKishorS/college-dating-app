@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { supabase, db } from './supabaseClient';
-import NoAuthProfileSetup from './components/NoAuthProfileSetup';
+import SimpleProfileSetup from './components/SimpleProfileSetup';
 import SwipeInterface from './components/SwipeInterface';
 import MatchesScreen from './components/MatchesScreen';
 import ChatScreen from './components/ChatScreen';
 import './App.css';
 
-function App() {
+function NoAuthApp() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,8 +33,8 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<NoAuthProfileSetup />} />
-          <Route path="/profile-setup" element={<NoAuthProfileSetup />} />
+          <Route path="/" element={<SimpleProfileSetup />} />
+          <Route path="/profile-setup" element={<SimpleProfileSetup />} />
           <Route path="/swipe" element={<SwipeInterface />} />
           <Route path="/matches" element={<MatchesScreen />} />
           <Route path="/chat/:matchId" element={<ChatScreen />} />
@@ -44,4 +44,4 @@ function App() {
   );
 }
 
-export default App;
+export default NoAuthApp;
