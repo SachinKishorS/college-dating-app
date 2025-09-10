@@ -25,13 +25,16 @@ const NoAuthProfileSetup = () => {
     setError('');
 
     try {
-      const userId = localStorage.getItem('demo_user_id') || `demo_${Date.now()}`;
-      localStorage.setItem('demo_user_id', userId);
+      // Get the authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
 
       const { error } = await supabase
         .from('profiles')
         .upsert({
-          id: userId,
+          id: user.id,
           name: formData.name,
           age: parseInt(formData.age),
           bio: formData.bio,
