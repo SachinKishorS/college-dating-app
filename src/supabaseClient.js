@@ -6,7 +6,11 @@ const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1
 
 
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined
+  }
+})
 
 // Database helper functions
 export const db = {
