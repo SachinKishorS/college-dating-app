@@ -1,7 +1,6 @@
 -- Tinder-style MVP Database Schema for Supabase
 
--- Enable Row Level Security
-ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
+-- Note: auth.users table is managed by Supabase and doesn't need RLS modification
 
 -- Users table (extends Supabase auth.users)
 CREATE TABLE public.profiles (
@@ -118,26 +117,8 @@ CREATE TRIGGER trigger_create_match
   FOR EACH ROW
   EXECUTE FUNCTION create_match_on_mutual_swipe();
 
--- Function to handle new user profile creation
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, name, age, bio, photo_url)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'name', ''),
-    COALESCE((NEW.raw_user_meta_data->>'age')::integer, 18),
-    COALESCE(NEW.raw_user_meta_data->>'bio', ''),
-    COALESCE(NEW.raw_user_meta_data->>'photo_url', '')
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Trigger to create profile when user signs up
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+-- Note: User profile creation will be handled by the app, not by database triggers
+-- This avoids permission issues with auth.users table
 
 -- Enable Realtime for messages
 ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
