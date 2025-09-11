@@ -81,6 +81,10 @@ const SignupPage = () => {
       const { data, error } = await supabase.auth.signUp({
         email: email,
         password: password,
+        options: {
+          emailRedirectTo: undefined,
+          data: { created_via: 'signup_page' }
+        }
       });
       
       if (error) {
@@ -101,17 +105,10 @@ const SignupPage = () => {
         
         setErrorMessage(errorMsg);
       } else {
-        // Success
-        setSuccessMessage('Account created successfully! Please check your email to verify your account.');
-        
-        // Clear form
+        // Success: redirect immediately to profile setup
         setEmail('');
         setPassword('');
-        
-        // Redirect to profile setup after a short delay
-        setTimeout(() => {
-          navigate('/profile-setup');
-        }, 2000);
+        navigate('/profile-setup');
       }
     } catch (err) {
       // Handle unexpected errors

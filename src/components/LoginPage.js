@@ -39,16 +39,16 @@ const LoginPage = () => {
         const { data, error } = await supabase.auth.signUp({
           email: email,
           password: password,
+          options: {
+            emailRedirectTo: undefined,
+            data: { created_via: 'login_page' }
+          }
         });
 
         if (error) throw error;
 
-        if (data.user && !data.user.email_confirmed_at) {
-          setError('Please check your email and click the confirmation link to complete signup.');
-        } else {
-          // Redirect to profile setup
-          window.location.href = '/profile-setup';
-        }
+        // Immediately redirect to profile setup after signup
+        window.location.href = '/profile-setup';
       } else {
         // Sign in
         const { data, error } = await supabase.auth.signInWithPassword({
