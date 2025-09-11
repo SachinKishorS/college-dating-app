@@ -1,15 +1,23 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Use environment variables for production, fallback to hardcoded values for development
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://csfdyvzhtnddjwwwuzej.supabase.co'
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzZmR5dnpodG5kZGp3d3d1emVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1MTY2NzUsImV4cCI6MjA3MzA5MjY3NX0.tmU8tU85sExCFTg1ddZ6Zw3eXpZUOv0dPoFx7MiEjwI'
+const supabaseUrl =
+  process.env.REACT_APP_SUPABASE_URL ||
+  'https://csfdyvzhtnddjwwwuzej.supabase.co'
 
-
+const supabaseKey =
+  process.env.REACT_APP_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzZmR5dnpodG5kZGp3d3d1emVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1MTY2NzUsImV4cCI6MjA3MzA5MjY3NX0.tmU8tU85sExCFTg1ddZ6Zw3eXpZUOv0dPoFx7MiEjwI'
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined
-  }
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    flowType: 'pkce',
+    redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+  },
 })
 
 // Database helper functions
@@ -36,18 +44,18 @@ export const db = {
 
   // Get profiles to swipe (excluding already swiped and self)
   async getProfilesToSwipe(userId) {
-    const { data: swipedIds } = await supabase
+    const { data: swiped } = await supabase
       .from('swipes')
       .select('swiped_id')
       .eq('swiper_id', userId)
 
-    const swipedIdsList = swipedIds?.map(s => s.swiped_id) || []
-    swipedIdsList.push(userId) // Exclude self
+    const swipedIdsList = (swiped?.map(s => s.swiped_id) || []).concat(userId)
+    const ids = swipedIdsList.map(id => `"${id}"`).join(',')
 
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .not('id', 'in', `(${swipedIdsList.join(',')})`)
+      .not('id', 'in', `(${ids})`)
       .limit(10)
 
     return { data, error }
@@ -60,7 +68,7 @@ export const db = {
       .insert({
         swiper_id: swiperId,
         swiped_id: swipedId,
-        direction
+        direction,
       })
       .select()
       .single()
@@ -102,7 +110,7 @@ export const db = {
       .insert({
         match_id: matchId,
         sender_id: senderId,
-        message_text: messageText
+        message_text: messageText,
       })
       .select(`
         *,
@@ -117,12 +125,16 @@ export const db = {
   subscribeToMessages(matchId, callback) {
     return supabase
       .channel(`messages:${matchId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `match_id=eq.${matchId}`
-      }, callback)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `match_id=eq.${matchId}`,
+        },
+        callback
+      )
       .subscribe()
-  }
+  },
 }
