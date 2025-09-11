@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase, db } from './supabaseClient';
 import LoginPage from './components/LoginPage';
-import NoAuthProfileSetup from './components/NoAuthProfileSetup';
+import ProfileSetup from './components/ProfileSetup';
 import SwipeInterface from './components/SwipeInterface';
 import MatchesScreen from './components/MatchesScreen';
 import ChatScreen from './components/ChatScreen';
@@ -82,7 +82,7 @@ function App() {
                 profileComplete ? (
                   <Navigate to="/swipe" />
                 ) : (
-                  <NoAuthProfileSetup />
+                  <ProfileSetup />
                 )
               ) : (
                 <Navigate to="/" />

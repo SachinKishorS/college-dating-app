@@ -8,7 +8,8 @@ const ProfileSetup = () => {
     name: '',
     age: '',
     bio: '',
-    photo: null
+    photo1: null,
+    photo2: null
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,23 +33,22 @@ const ProfileSetup = () => {
   };
 
   const handlePhotoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData(prev => ({
-        ...prev,
-        photo: file
-      }));
-    }
+    const { name, files } = e.target;
+    const file = files && files[0] ? files[0] : null;
+    setFormData(prev => ({
+      ...prev,
+      [name]: file
+    }));
   };
 
-  const uploadPhoto = async (file) => {
+  const uploadPhoto = async (file, index) => {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}.${fileExt}`;
+    const fileName = `${user.id}_${index}.${fileExt}`;
     const filePath = `profiles/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('profile-photos')
-      .upload(filePath, file);
+      .upload(filePath, file, { upsert: true });
 
     if (uploadError) throw uploadError;
 
@@ -65,21 +65,24 @@ const ProfileSetup = () => {
     setError('');
 
     try {
-      let photoUrl = '';
-      
-      if (formData.photo) {
-        photoUrl = await uploadPhoto(formData.photo);
+      if (!formData.photo1 || !formData.photo2) {
+        throw new Error('Please select two photos');
       }
+
+      const [photoUrl1, photoUrl2] = await Promise.all([
+        uploadPhoto(formData.photo1, 1),
+        uploadPhoto(formData.photo2, 2)
+      ]);
 
       // First try to update existing profile, if that fails, create new one
       let { error: profileError } = await db.updateProfile(user.id, {
         name: formData.name,
         age: parseInt(formData.age),
         bio: formData.bio,
-        photo_url: photoUrl
+        photo_url_1: photoUrl1,
+        photo_url_2: photoUrl2
       });
 
-      // If update fails, try to create new profile
       if (profileError) {
         const { error: createError } = await supabase
           .from('profiles')
@@ -88,13 +91,12 @@ const ProfileSetup = () => {
             name: formData.name,
             age: parseInt(formData.age),
             bio: formData.bio,
-            photo_url: photoUrl
+            photo_url_1: photoUrl1,
+            photo_url_2: photoUrl2
           });
-        
         if (createError) throw createError;
       }
 
-      // Force a page reload to update the app state
       window.location.href = '/swipe';
     } catch (err) {
       console.error('Profile setup error:', err);
@@ -108,11 +110,13 @@ const ProfileSetup = () => {
     return <div className="loading-container">Loading...</div>;
   }
 
+  const isSubmitDisabled = isLoading || !formData.name || !formData.age || !formData.photo1 || !formData.photo2;
+
   return (
     <div className="container">
       <div className="profile-setup">
         <h1>Complete Your Profile</h1>
-        <p className="subtitle">Tell us about yourself to get started</p>
+        <p className="subtitle">Add two photos to get started</p>
 
         {error && (
           <div className="error-message" style={{ 
@@ -129,27 +133,57 @@ const ProfileSetup = () => {
 
         <form onSubmit={handleSubmit} className="profile-form">
           <div className="form-group">
-            <label htmlFor="photo" className="photo-upload">
+            <label htmlFor="photo1" className="photo-upload">
               <div className="photo-preview">
-                {formData.photo ? (
+                {formData.photo1 ? (
                   <img 
-                    src={URL.createObjectURL(formData.photo)} 
-                    alt="Preview" 
+                    src={URL.createObjectURL(formData.photo1)} 
+                    alt="Preview 1" 
                     className="preview-image"
                   />
                 ) : (
                   <div className="photo-placeholder">
                     <Camera size={40} />
-                    <span>Add Photo</span>
+                    <span>Add Photo 1</span>
                   </div>
                 )}
               </div>
               <input
                 type="file"
-                id="photo"
+                id="photo1"
+                name="photo1"
                 accept="image/*"
                 onChange={handlePhotoChange}
                 className="photo-input"
+                required
+              />
+            </label>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="photo2" className="photo-upload">
+              <div className="photo-preview">
+                {formData.photo2 ? (
+                  <img 
+                    src={URL.createObjectURL(formData.photo2)} 
+                    alt="Preview 2" 
+                    className="preview-image"
+                  />
+                ) : (
+                  <div className="photo-placeholder">
+                    <Camera size={40} />
+                    <span>Add Photo 2</span>
+                  </div>
+                )}
+              </div>
+              <input
+                type="file"
+                id="photo2"
+                name="photo2"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="photo-input"
+                required
               />
             </label>
           </div>
@@ -208,7 +242,7 @@ const ProfileSetup = () => {
           <button 
             type="submit" 
             className="submit-btn"
-            disabled={isLoading}
+            disabled={isSubmitDisabled}
           >
             {isLoading ? 'Creating Profile...' : 'Complete Profile'}
           </button>
