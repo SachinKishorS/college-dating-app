@@ -58,20 +58,8 @@ const LoginPage = () => {
 
         if (error) throw error;
 
-        // Check if profile exists
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profile && profile.name) {
-          // Profile exists, go to swipe
-          window.location.href = '/swipe';
-        } else {
-          // No profile, go to setup
-          window.location.href = '/profile-setup';
-        }
+        // Immediately redirect to profile setup to avoid extra fetch delay
+        window.location.href = '/profile-setup';
       }
     } catch (err) {
       console.error('Auth error:', err);
