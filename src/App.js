@@ -12,6 +12,7 @@ function App() {
   const { user, isLoading, profileComplete } = useAuth();
 
   if (isLoading) {
+    // Block everything until auth state is resolved
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
@@ -27,28 +28,24 @@ function App() {
           <Route 
             path="/" 
             element={
-              user ? (
-                profileComplete ? (
-                  <Navigate to="/swipe" />
-                ) : (
-                  <Navigate to="/profile-setup" />
-                )
-              ) : (
+              !user ? (
                 <LoginPage />
+              ) : !profileComplete ? (
+                <Navigate to="/profile-setup" />
+              ) : (
+                <Navigate to="/swipe" />
               )
             } 
           />
           <Route 
             path="/profile-setup" 
             element={
-              user ? (
-                profileComplete ? (
-                  <Navigate to="/swipe" />
-                ) : (
-                  <ProfileSetup />
-                )
-              ) : (
+              !user ? (
                 <Navigate to="/" />
+              ) : !profileComplete ? (
+                <ProfileSetup />
+              ) : (
+                <Navigate to="/swipe" />
               )
             } 
           />
