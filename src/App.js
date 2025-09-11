@@ -14,38 +14,45 @@ function App() {
   const [profileComplete, setProfileComplete] = useState(false);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      
-      if (user) {
-        // Check if profile is complete
-        const { data: profile } = await db.getProfile(user.id);
-        setProfileComplete(profile && profile.name && profile.age);
+    let isMounted = true;
+
+    const setProfileStatus = async (theUser) => {
+      if (!theUser) {
+        if (isMounted) setProfileComplete(false);
+        return;
       }
-      
-      setIsLoading(false);
+      const { data: profile } = await db.getProfile(theUser.id);
+      if (isMounted) {
+        const isComplete = Boolean(
+          profile && profile.name && profile.age && profile.photo_url_1 && profile.photo_url_2
+        );
+        setProfileComplete(isComplete);
+      }
     };
 
-    getUser();
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUser = session?.user ?? null;
+      if (isMounted) setUser(currentUser);
+      await setProfileStatus(currentUser);
+      if (isMounted) setIsLoading(false);
+    };
+
+    init();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Check if profile is complete
-          const { data: profile } = await db.getProfile(session.user.id);
-          setProfileComplete(profile && profile.name && profile.age);
-        } else {
-          setProfileComplete(false);
-        }
-        
-        setIsLoading(false);
+      async (_event, session) => {
+        const nextUser = session?.user ?? null;
+        if (isMounted) setUser(nextUser);
+        await setProfileStatus(nextUser);
+        if (isMounted) setIsLoading(false);
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   if (isLoading) {
